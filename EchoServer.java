@@ -4,7 +4,7 @@ import java.util.*;
 
 public class EchoServer {
 
-        private static final Map<String, String> store = new HashMap<>();
+    private static final Map<String, String> store = new HashMap<>();
 
 
     public static void main(String[] args) throws IOException{
@@ -12,27 +12,37 @@ public class EchoServer {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Server listening on port " + port);
 
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Client connected!");
+        while (true) {
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connected!");
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            Thread clientThread = new Thread (() -> handleClient(clientSocket));
+            clientThread.start();
+        }
 
-        String line;
-        while ((line = in.readLine()) != null){
-            System.out.println("Received: " + line);
-            String response = handleCommand(line);
-            out.println(response);
+    }
+        private static void handleClient(Socket clientSocket) {
+            try {
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String line;
+            while ((line = in.readLine()) != null){
+                System.out.println("Received: " + line);
+                String response = handleCommand(line);
+                out.println(response);
         }
     
         clientSocket.close();
-        serverSocket.close();
-    }
-
-       private static String handleCommand(String line){
-        String[] parts = line.trim().split("\\s+");
-        if(parts.length == 0 || parts[0].isEmpty()){
-            return "ERR empty command";
+        System.out.println("Client disconnected.");
+            } catch (IOException e) {
+                System.out.println("Error handling client: " + e.getMessage());
+            }
+        }
+        private static String handleCommand(String line){
+            String[] parts = line.trim().split("\\s+");
+            if(parts.length == 0 || parts[0].isEmpty()){
+                return "ERR empty command";
         }
 
         String command = parts[0].toUpperCase();
