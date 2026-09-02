@@ -13,6 +13,7 @@ public class EchoServer {
         }
     };
 
+    private static final Map<String, Long> expirationTimes = new HashMap<>();
 
     public static void main(String[] args) throws IOException{
         int port = 6379;
@@ -69,8 +70,44 @@ public class EchoServer {
                     return "ERR wrong number of arguments for GET";
                 }               
                 String getKey = parts[1];
+
+                if (expirationTimes.containsKey(getKey)) {
+                    long expireAt = expirationTimes.get(getKey);
+                    if (System.currentTimeMillis() >= expireAt) {
+                        store.remove(getKey);
+                        expirationTimes.remove(getKey);
+                        return "(nil)";
+                    }
+                }
+                
                 String result = store.get(getKey);
                 return (result != null) ? result : "(nil)";
+            
+            case "DELETE":
+                if (parts.length < 2) {
+                    return "ERR wrong number of arguments for DELETE";
+                }
+                String deleteKey = parts[1];
+                boolean existed = store.remove(deleteKey) != null;
+                expirationTimes.remove(deleteKey);
+                return existed ? "OK" : "(nil)";
+            
+            case "EXPIRE":
+                if(parts.length < 3) {
+                    return "ERR wrong number of arguments for EXPIRE";
+                }
+                String expireKey = parts[1];
+                if (!store.containsKey(expireKey)) {
+                    return "(nil)";
+                }
+                try {
+                    int seconds = Integer.parseInt(parts[2]);
+                    long expireAt = System.currentTimeMillis() + (seconds * 1000L);
+                    expirationTimes.put(expireKey, expireAt);
+                    return "OK";
+                } catch (NumberFormatException e) {
+                    return "ERR seconds must be an integer";
+                }
             
             default:
                 return "ERR unknown command ' " + command + " ' ";
