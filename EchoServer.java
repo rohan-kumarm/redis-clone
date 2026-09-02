@@ -4,7 +4,14 @@ import java.util.*;
 
 public class EchoServer {
 
-    private static final Map<String, String> store = new HashMap<>();
+    private static final int MAX_ENTRIES = 5;
+
+    private static final Map<String, String> store = new LinkedHashMap<>(16, 0.75f, true){
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest){
+            return size() > MAX_ENTRIES;
+        }
+    };
 
 
     public static void main(String[] args) throws IOException{
