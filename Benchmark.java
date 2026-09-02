@@ -22,6 +22,18 @@ public class Benchmark {
 
         System.out.printf("SET: %d requests in %.2f seconds (%.2f ops/sec)%n", numRequests, elapsedSeconds, opsPerSecond);
 
+        long getStartTime = System.currentTimeMillis();
+
+        for (int i = 0; i < numRequests; i++) {
+            out.println("GET key" + i);
+            in.readLine();
+        }
+
+        long getEndTime = System.currentTimeMillis();
+        double getElapsedSeconds = (getEndTime - getStartTime) / 1000.0;
+        double getOpsPerSecond = numRequests / getElapsedSeconds;
+
+        System.out.printf("GET: %d requests in %.2f seconds (%.2f ops/sec)%n", numRequests, getElapsedSeconds, getOpsPerSecond);
         socket.close();
     }
 }
